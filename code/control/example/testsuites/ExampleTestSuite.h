@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef SCALEDCARS_CONTROL_EXAMPLE_TESTSUITE_H
-#define SCALEDCARS_CONTROL_EXAMPLE_TESTSUITE_H
+#ifndef OPENDLV_CONTROL_EXAMPLE_TESTSUITE_H
+#define OPENDLV_CONTROL_EXAMPLE_TESTSUITE_H
 
 #include "cxxtest/TestSuite.h"
 
@@ -26,7 +26,7 @@
 #include "../include/Example.h"
 
 using namespace std;
-using namespace scaledcars::control;
+using namespace opendlv::control;
 
 class ExampleTest : public CxxTest::TestSuite {
    public:
@@ -39,4 +39,4 @@ class ExampleTest : public CxxTest::TestSuite {
     }
 };
 
-#endif /*SCALEDCARS_CONTROL_EXAMPLE_TESTSUITE_H*/
+#endif /*OPENDLV_CONTROL_EXAMPLE_TESTSUITE_H*/

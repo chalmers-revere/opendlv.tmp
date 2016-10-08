@@ -22,7 +22,7 @@
 
 #include <opendavinci/odcore/base/module/TimeTriggeredConferenceClientModule.h>
 
-namespace scaledcars {
+namespace opendlv {
 namespace control {
 
 using namespace std;
@@ -52,6 +52,6 @@ class Example : public odcore::base::module::TimeTriggeredConferenceClientModule
     odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
 };
 }
-} // scaledcars::control
+} // opendlv::control
 
 #endif /*CONTROL_EXAMPLE_H*/

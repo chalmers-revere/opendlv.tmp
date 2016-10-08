@@ -20,6 +20,6 @@
 #include "Example.h"
 
 int32_t main(int32_t argc, char **argv) {
-    scaledcars::control::Example example(argc, argv);
+    opendlv::control::Example example(argc, argv);
     return example.runModule();
 }

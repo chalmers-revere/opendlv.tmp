@@ -21,11 +21,11 @@
 
 #include <iostream>
 
-#include "odvdscaledcarsdatamodel/generated/chalmersrevere/scaledcars/ExampleMessage.h"
+#include "odvdopendlvdatamodel/generated/chalmersrevere/opendlv/ExampleMessage.h"
 
 #include "Example.h"
 
-namespace scaledcars {
+namespace opendlv {
 namespace control {
 
 using namespace std;
@@ -41,7 +41,7 @@ void Example::setUp() {}
 void Example::tearDown() {}
 
 odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode Example::body() {
-    chalmersrevere::scaledcars::ExampleMessage em;
+    chalmersrevere::opendlv::ExampleMessage em;
     cout << em.toString() << endl;
     em.setField1(1234);
     cout << em.toString() << endl;
@@ -53,4 +53,4 @@ odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode Example::body() {
     return odcore::data::dmcp::ModuleExitCodeMessage::OKAY;
 }
 }
-} // scaledcars::control
+} // opendlv::control
