@@ -30,7 +30,7 @@ cd /opt/opendlv.build
 
 echo "[opendlv Docker builder] Complete build."
 cmake -E remove_directory .
-PATH=/opt/od4/bin:$PATH cmake -D OPENDAVINCI_DIR=/opt/od4 -D CMAKE_INSTALL_PREFIX=/opt/opendlv /opt/opendlv.sources
+PATH=/opt/od4/bin:$PATH cmake -D OPENDAVINCI_DIR=/opt/od4 -D ODVDVEHICLE_DIR=/opt/opendlv.core -D CMAKE_INSTALL_PREFIX=/opt/opendlv /opt/opendlv.sources
 make -j4
 EOF
 

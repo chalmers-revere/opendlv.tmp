@@ -57,10 +57,17 @@ SET(AUTOMOTIVEDATA_DIR "${OPENDAVINCI_DIR}")
 FIND_PACKAGE (AutomotiveData REQUIRED)
 
 ###########################################################################
+# Find ODVDVehicle.
+SET (CMAKE_MODULE_PATH "${ODVDVEHICLE_DIR}/share/cmake-${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}/Modules" ${CMAKE_MODULE_PATH})
+FIND_PACKAGE (ODVDVehicle REQUIRED)
+
+###########################################################################
 # Find ODVDOpenDLVDataModel.
 find_package(ODVDOpenDLVDataModel REQUIRED)
 
 ###############################################################################
+# Set header files from ODVDVehicle.
+INCLUDE_DIRECTORIES (SYSTEM ${ODVDVEHICLE_INCLUDE_DIRS})
 # Set header files from ODVDOpenDLVDataModel.
 INCLUDE_DIRECTORIES (SYSTEM ${ODVDOPENDLVDATAMODEL_INCLUDE_DIRS})
 # Set header files from OpenDaVINCI.
@@ -76,6 +83,7 @@ INCLUDE_DIRECTORIES(include)
 set(LIBRARIES ${OPENDAVINCI_LIBRARIES}
               ${OPENDLV_LIBRARIES}
               ${AUTOMOTIVEDATA_LIBRARIES}
+              ${ODVDVEHICLE_LIBRARIES}
               ${ODVDOPENDLVDATAMODEL_LIBRARIES})
 
 ###############################################################################

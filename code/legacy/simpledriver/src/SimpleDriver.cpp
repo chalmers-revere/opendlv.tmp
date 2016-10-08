@@ -32,6 +32,7 @@
 #include "opendlv/core/wrapper/graph/Edge.h"
 #include "opendlv/core/wrapper/graph/Vertex.h"
 #include "opendlv/data/environment/EgoState.h"
+#include "opendlv/data/environment/WGS84Coordinate.h"
 #include "opendlv/data/environment/Polygon.h"
 #include "opendlv/data/environment/Obstacle.h"
 #include "opendlv/data/graph/WaypointsEdge.h"
@@ -43,7 +44,7 @@
 #include "opendlv/scenario/ScenarioFactory.h"
 #include "opendlv/scenario/LaneVisitor.h"
 
-#include "automotivedata/GeneratedHeaders_AutomotiveData.h"
+#include <odvdvehicle/generated/opendlv/proxy/ActuationRequest.h>
 
 #include "SimpleDriver.h"
 
@@ -79,7 +80,7 @@ namespace automotive {
             const double LENGTH_OF_STEERING_DRAWBAR = 5.0;
             const double LENGTH_OF_VELOCITY_DRAWBAR = 5.0;
 
-
+// TODO: Read WGS84 reference coordinate from configuration.
 
             core::wrapper::graph::DirectedGraph m_graph;
             if (urlOfSCNXFile.isValid()) {
@@ -150,8 +151,11 @@ namespace automotive {
 
 
                 // Check, if the first point is in our field of view.
+// TODO: Read WGS84 coordinate + transform it into Cartesian space.
                 c = getKeyValueDataStore().get(opendlv::data::environment::EgoState::ID());
                 EgoState es = c.getData<EgoState>();
+                c = getKeyValueDataStore().get(opendlv::data::environment::WGS84Coordinate::ID());
+                WGS84Coordinate wgs84 = c.getData<WGS84Coordinate>();
 
                 Polygon FOV;
                 const double ANGLE_FOV_IN_DEG = 45.0;
@@ -213,8 +217,12 @@ namespace automotive {
                             TimeStamp oldTimeStamp;
                             double V = 0;
                             while ( (nextWaypointInFrontOfDrawBar) && (getModuleStateAndWaitForRemainingTimeInTimeslice() == odcore::data::dmcp::ModuleStateMessage::RUNNING) ) {
+// TODO: Read next WGS84 coordinate + transform it into Cartesian space.
                                 c = getKeyValueDataStore().get(opendlv::data::environment::EgoState::ID());
                                 es = c.getData<EgoState>();
+                                c = getKeyValueDataStore().get(opendlv::data::environment::WGS84Coordinate::ID());
+                                wgs84 = c.getData<WGS84Coordinate>();
+
                                 TimeStamp currentTimeStamp;
 
                                 // Compute velocity.
@@ -331,25 +339,21 @@ namespace automotive {
                                     }
 
                                     // Create vehicle control data.
-                                    VehicleControl vc;
+                                    opendlv::proxy::ActuationRequest ar;
 
                                     // With setSpeed you can set a desired speed for the vehicle in the range of -2.0 (backwards) .. 0 (stop) .. +2.0 (forwards)
-                                    vc.setSpeed(2);
+                                    ar.setAcceleration(1.0);
 
 //                                    // With setSteeringWheelAngle, you can steer in the range of -26 (left) .. 0 (straight) .. +25 (right)
-                                    vc.setSteeringWheelAngle(steering);
-
-                                    // You can also turn on or off various lights:
-                                    vc.setBrakeLights(false);
-                                    vc.setFlashingLightsLeft(false);
-                                    vc.setFlashingLightsRight(false);
+                                    ar.setSteering(steering);
+                                    ar.setIsValid(true);
 
                                     // Create container for finally sending the data.
-                                    Container c2(vc);
+                                    Container c2(ar);
                                     // Send container.
                                     getConference().send(c2);
 
-                                    cerr << "VehicleControl: " << vc.toString() << endl;
+                                    cerr << "ActuationRequest: " << ar.toString() << endl;
 
                                     // Visualize drawbar.
                                     Polygon p;
@@ -374,14 +378,15 @@ namespace automotive {
                             }
                             currentPoint = nextPoint;
                         }
-                        VehicleControl vc;
+                        opendlv::proxy::ActuationRequest ar;
+                        ar.setIsValid(true);
 
                         // Create container for finally sending the data.
-                        Container c2(vc);
+                        Container c2(ar);
                         // Send container.
                         getConference().send(c2);
 
-                        cerr << "VehicleControl: " << vc.toString() << endl;
+                        cerr << "ActuationRequest: " << ar.toString() << endl;
 
                         TimeStamp endTime;
 

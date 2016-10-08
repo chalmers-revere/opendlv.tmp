@@ -21,6 +21,7 @@ cmake_minimum_required(VERSION 2.8)
 #
 # PATH=/opt/od4/bin:$PATH cmake -D CMAKE_INSTALL_PREFIX=<Where shall Chalmers.Revere.OpenDLV be installed?> 
 #                               -D OPENDAVINCI_DIR=<Where is OpenDaVINCI installed?> 
+#                               -D ODVDVEHICLE_DIR=<Where is ODVDVehicle installed?> 
 #                               -D CXXTEST_INCLUDE_DIR=<Where is CxxTest installed?> ..
 #
 # The adjusted PATH variable is required to find odDataStructureGenerator-latest.jar.
@@ -117,6 +118,7 @@ ExternalProject_Add(code
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/code"
     CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
     CMAKE_ARGS "-DOPENDAVINCI_DIR=${OPENDAVINCI_DIR}"
+    CMAKE_ARGS "-DODVDVEHICLE_DIR=${ODVDVEHICLE_DIR}"
     CMAKE_ARGS "-DCXXTEST_INCLUDE_DIR=${CXXTEST_INCLUDE_DIR}"
     TEST_BEFORE_INSTALL 1
     INSTALL_COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/code-prefix/src/code-build --target install COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/code-prefix/src/code-build --target ${MAKE_PACKAGE})
