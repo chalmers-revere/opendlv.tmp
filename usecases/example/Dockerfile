@@ -1,4 +1,4 @@
-# Dockerfile - Dockerfile to run scaled cars software.
+# Dockerfile - Dockerfile to run OpenDLV software.
 # Copyright (C) 2016 Christian Berger
 #
 # This program is free software; you can redistribute it and/or
@@ -15,6 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# Date: 2016-09-15
+# Date: 2016-10-08
 
-FROM seresearch/scaledcars-on-opendlv-core-on-opendavinci-ubuntu-16.04-complete:latest
+FROM seresearch/opendlv-on-opendlv-core-on-opendavinci-ubuntu-16.04-complete:latest
