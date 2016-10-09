@@ -46,30 +46,26 @@ using namespace odcore::data;
 using namespace odcore::data::image;
 
 TrafficLightDetector::TrafficLightDetector(const int32_t &argc, char **argv)
-    : TimeTriggeredConferenceClientModule(argc, argv, "trafficlightdetector")
+    : DataTriggeredConferenceClientModule(argc, argv, "trafficlightdetector")
     , m_hasAttachedToSharedImageMemory(false)
     , m_sharedImageMemory()
     , m_image(NULL)
     , m_debug(false)
-    , m_cascadeClassifier(NULL)
+    , m_cascadeClassifier()
     , m_frame() {
     // Calling the xml trained haar.
-    m_cascadeClassifier = new cv::CascadeClassifier("./haar_xml_07_19.xml");
-}
-
-TrafficLightDetector::~TrafficLightDetector() {
-    if (m_cascadeClassifier != NULL) {
-        delete m_cascadeClassifier;
+    m_cascadeClassifier.load("./haar_xml_07_19.xml");
+    if (m_cascadeClassifier.empty()) {
+        cerr << "Failed to load ./haar_xml_07_19.xml" << endl;
     }
 }
+
+TrafficLightDetector::~TrafficLightDetector() {}
 
 void TrafficLightDetector::setUp() {
-    // This method will be call automatically _before_ running body().
-    if (m_debug) {
-        // Create an OpenCV-window.
-        cv::namedWindow("WindowShowImage", CV_WINDOW_AUTOSIZE);
-        cv::moveWindow("WindowShowImage", 300, 100);
-    }
+    // Get configuration data.
+    KeyValueConfiguration kv = getKeyValueConfiguration();
+    m_debug = kv.getValue< int32_t >("trafficlightdetector.debug") == 1;
 }
 
 void TrafficLightDetector::tearDown() {
@@ -77,9 +73,13 @@ void TrafficLightDetector::tearDown() {
     if (m_image != NULL) {
         cvReleaseImage(&m_image);
     }
+}
 
-    if (m_debug) {
-        cv::destroyWindow("WindowShowImage");
+void TrafficLightDetector::nextContainer(Container &c) {
+    if (c.getDataType() == odcore::data::image::SharedImage::ID()) {
+        if (readSharedImage(c)) {
+            processImage();
+        }
     }
 }
 
@@ -93,6 +93,7 @@ bool TrafficLightDetector::readSharedImage(Container &c) {
         if (!m_hasAttachedToSharedImageMemory) {
             m_sharedImageMemory = odcore::wrapper::SharedMemoryFactory::attachToSharedMemory(
             si.getName());
+            m_hasAttachedToSharedImageMemory = true;
         }
 
         // Check if we could successfully attach to the shared memory.
@@ -118,10 +119,10 @@ bool TrafficLightDetector::readSharedImage(Container &c) {
 }
 
 void TrafficLightDetector::processImage() {
-    if (m_cascadeClassifier != NULL) {
+    if (!m_cascadeClassifier.empty()) {
         // Detect TrafficLights through cascade classifier.
         vector<cv::Rect> trLights;
-        m_cascadeClassifier->detectMultiScale(m_frame, trLights, 1.1, 0, CV_HAAR_SCALE_IMAGE | CV_HAAR_FEATURE_MAX, cv::Size(24, 24));
+        m_cascadeClassifier.detectMultiScale(m_frame, trLights, 1.1, 0, CV_HAAR_SCALE_IMAGE | CV_HAAR_FEATURE_MAX, cv::Size(24, 24));
         cv::Mat trafficTemplate;
         m_frame.copyTo(trafficTemplate);
 
@@ -163,32 +164,5 @@ void TrafficLightDetector::processImage() {
     }
 }
 
-// This method will do the main data processing job.
-// Therefore, it tries to open the real camera first. If that fails, the virtual camera images from camgen are used.
-odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode TrafficLightDetector::body() {
-    // Get configuration data.
-    KeyValueConfiguration kv = getKeyValueConfiguration();
-    m_debug = kv.getValue< int32_t >("trafficlightdetector.debug") == 1;
-
-    // Overall state machine handler.
-    while (getModuleStateAndWaitForRemainingTimeInTimeslice() == odcore::data::dmcp::ModuleStateMessage::RUNNING) {
-        bool has_next_frame = false;
-
-        // Get the most recent available container for a SharedImage.
-        Container c = getKeyValueDataStore().get(odcore::data::image::SharedImage::ID());
-
-        if (c.getDataType() == odcore::data::image::SharedImage::ID()) {
-            // Example for processing the received container.
-            has_next_frame = readSharedImage(c);
-        }
-
-        // Process the read image and calculate regular lane following set values for control algorithm.
-        if (true == has_next_frame) {
-            processImage();
-        }
-    }
-
-    return odcore::data::dmcp::ModuleExitCodeMessage::OKAY;
-}
 }
 } // opendlv::legacy

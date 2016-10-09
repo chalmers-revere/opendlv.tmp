@@ -24,7 +24,7 @@
 
 #include <memory>
 
-#include <opendavinci/odcore/base/module/TimeTriggeredConferenceClientModule.h>
+#include <opendavinci/odcore/base/module/DataTriggeredConferenceClientModule.h>
 #include <opendavinci/odcore/data/TimeStamp.h>
 #include <opendavinci/odcore/wrapper/SharedMemory.h>
 
@@ -36,7 +36,7 @@ using namespace std;
 /**
  * This class is an exemplary skeleton for processing video data.
  */
-class TrafficLightDetector : public odcore::base::module::TimeTriggeredConferenceClientModule {
+class TrafficLightDetector : public odcore::base::module::DataTriggeredConferenceClientModule {
    private:
     /**
      * "Forbidden" copy constructor. Goal: The compiler should warn
@@ -68,7 +68,7 @@ class TrafficLightDetector : public odcore::base::module::TimeTriggeredConferenc
 
     virtual ~TrafficLightDetector();
 
-    odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
+    virtual void nextContainer(odcore::data::Container &c);
 
    protected:
     /**
@@ -93,7 +93,7 @@ class TrafficLightDetector : public odcore::base::module::TimeTriggeredConferenc
     IplImage *m_image;
     bool m_debug;
 
-    cv::CascadeClassifier *m_cascadeClassifier;
+    cv::CascadeClassifier m_cascadeClassifier;
     cv::Mat m_frame;
 };
 }
