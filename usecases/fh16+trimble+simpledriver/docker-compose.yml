@@ -27,6 +27,27 @@ services:
         - .:/opt/opendlv.data
         command: "/opt/od4/bin/odsupercomponent --cid=${CID} --verbose=1 --configuration=/opt/opendlv.data/configuration"
 
+
+    # micro service for proxy-fh16.
+    proxy-fh16:
+        build: .
+        network_mode: "host"
+        devices:
+        - "/dev/pcanpci32:/dev/pcan32"
+        depends_on:
+            - odsupercomponent
+        command: "/opt/opendlv.core/bin/opendlv-core-system-proxy-fh16 --cid=${CID} --freq=100"
+
+
+    # micro service for proxy-trimble.
+    proxy-trimble:
+        build: .
+        network_mode: "host"
+        depends_on:
+            - odsupercomponent
+        command: "/opt/opendlv.core/bin/opendlv-core-system-proxy-trimble --cid=${CID}"
+
+
     # microservice for opendlv-legacy-simpledriver
     # docker run -ti --rm=true --net=host -v $PWD:/opt/opendlv.data -w /opt/opendlv.data seresearch/opendlv-on-opendlv-core-on-opendavinci-ubuntu-16.04-complete:latest /opt/opendlv/bin/opendlv-legacy-simpledriver --cid=189 --freq=10
     opendlv-legacy-simpledriver:
