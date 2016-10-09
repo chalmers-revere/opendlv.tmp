@@ -25,13 +25,17 @@ services:
         network_mode: "host"
         volumes:
         - .:/opt/opendlv.data
-        command: "/opt/od4/bin/odsupercomponent --cid=211 --verbose=1 --configuration=/opt/opendlv.data/configuration"
-        
-    # opendlv-control-example
-    opendlv-control-example:
+        command: "/opt/od4/bin/odsupercomponent --cid=${CID} --verbose=1 --configuration=/opt/opendlv.data/configuration"
+
+    # microservice for opendlv-legacy-simpledriver
+    # docker run -ti --rm=true --net=host -v $PWD:/opt/opendlv.data -w /opt/opendlv.data seresearch/opendlv-on-opendlv-core-on-opendavinci-ubuntu-16.04-complete:latest /opt/opendlv/bin/opendlv-legacy-simpledriver --cid=189 --freq=10
+    opendlv-legacy-simpledriver:
         build: .
         network_mode: "host"
         depends_on:
             - odsupercomponent
-        command: "/opt/opendlv/bin/opendlv-control-example --cid=211 --freq=10"
+        volumes:
+        - .:/opt/opendlv.data
+        working_dir: "/opt/opendlv.data"
+        command: "/opt/opendlv/bin/opendlv-legacy-simpledriver --cid=${CID} --freq=10"
 

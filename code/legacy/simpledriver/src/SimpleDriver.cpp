@@ -96,20 +96,22 @@ namespace automotive {
                 cout << m_graph.toGraphizDot() << endl << endl;
             }
 
-            string startWaypoint = "";
-            string endWaypoint = "";
+//            string startWaypoint = "";
+//            string endWaypoint = "";
 
-            cout << endl;
-            cout << "Welcome to SimpleDriver" << endl << endl;
-            if (startWaypoint == "") {
-                cout << "Where do you want to start your route? (The point should be in front of us! Example: 1.1.1.1)." << endl;
-                cin >> startWaypoint;
-            }
-            if (endWaypoint == "") {
-                cout << "Where do you want to end your route? (Example: 1.4.1.2)." << endl;
-                cin >> endWaypoint;
-            }
+//            cout << endl;
+//            cout << "Welcome to SimpleDriver" << endl << endl;
+//            if (startWaypoint == "") {
+//                cout << "Where do you want to start your route? (The point should be in front of us! Example: 1.1.1.1)." << endl;
+//                cin >> startWaypoint;
+//            }
+//            if (endWaypoint == "") {
+//                cout << "Where do you want to end your route? (Example: 1.4.1.2)." << endl;
+//                cin >> endWaypoint;
+//            }
 
+            string startWaypoint = "1.1.1.1";
+            string endWaypoint = "1.3.2.9";
             cout << "Start: '" << startWaypoint << "'" << endl;
             cout << "End: '" << endWaypoint << "'" << endl;
 

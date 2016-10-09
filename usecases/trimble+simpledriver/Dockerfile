@@ -1,4 +1,4 @@
-# docker-compose.yml - Composition of micro-services to run scaled cars software.
+# Dockerfile - Dockerfile to run OpenDLV software.
 # Copyright (C) 2016 Christian Berger
 #
 # This program is free software; you can redistribute it and/or
@@ -17,21 +17,4 @@
 
 # Date: 2016-10-08
 
-version: '2'
-
-services:
-    odsupercomponent:
-        build: .
-        network_mode: "host"
-        volumes:
-        - .:/opt/opendlv.data
-        command: "/opt/od4/bin/odsupercomponent --cid=211 --verbose=1 --configuration=/opt/opendlv.data/configuration"
-        
-    # opendlv-control-example
-    opendlv-control-example:
-        build: .
-        network_mode: "host"
-        depends_on:
-            - odsupercomponent
-        command: "/opt/opendlv/bin/opendlv-control-example --cid=211 --freq=10"
-
+FROM seresearch/opendlv-on-opendlv-core-on-opendavinci-ubuntu-16.04-complete:latest
