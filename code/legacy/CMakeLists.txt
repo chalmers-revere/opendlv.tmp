@@ -19,4 +19,5 @@ project(opendlv-legacy)
 
 add_subdirectory(lanefollower)
 add_subdirectory(simpledriver)
+add_subdirectory(trafficlightdetector)
 
