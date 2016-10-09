@@ -23,12 +23,12 @@
 #include <opencv/cv.h>
 
 #include <memory>
-#include "opendavinci/odcore/base/module/TimeTriggeredConferenceClientModule.h"
-#include "opendavinci/odcore/data/TimeStamp.h"
-#include "opendavinci/odcore/wrapper/SharedMemory.h"
 
-#include "automotivedata/GeneratedHeaders_AutomotiveData.h"
-#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
+#include <opendavinci/odcore/base/module/TimeTriggeredConferenceClientModule.h>
+#include <opendavinci/odcore/data/TimeStamp.h>
+#include <opendavinci/odcore/wrapper/SharedMemory.h>
+
+#include <odvdvehicle/generated/opendlv/proxy/ActuationRequest.h>
 
 namespace opendlv {
     namespace legacy {
@@ -92,7 +92,7 @@ namespace opendlv {
                 double m_eSum;
                 double m_eOld;
 
-                automotive::VehicleControl m_vehicleControl;
+                opendlv::proxy::ActuationRequest m_actuationRequest;
 
                 virtual void setUp();
 

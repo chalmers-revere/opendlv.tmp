@@ -22,14 +22,12 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
-#include "opendavinci/odcore/base/KeyValueConfiguration.h"
-#include "opendavinci/odcore/base/Lock.h"
-#include "opendavinci/odcore/data/Container.h"
-#include "opendavinci/odcore/io/conference/ContainerConference.h"
-#include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
-
-#include "automotivedata/GeneratedHeaders_AutomotiveData.h"
-#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
+#include <opendavinci/odcore/base/KeyValueConfiguration.h>
+#include <opendavinci/odcore/base/Lock.h>
+#include <opendavinci/odcore/data/Container.h>
+#include <opendavinci/odcore/io/conference/ContainerConference.h>
+#include <opendavinci/odcore/wrapper/SharedMemoryFactory.h>
+#include <opendavinci/GeneratedHeaders_OpenDaVINCI.h>
 
 #include "LaneFollower.h"
 
@@ -40,8 +38,6 @@ namespace opendlv {
         using namespace odcore::base;
         using namespace odcore::data;
         using namespace odcore::data::image;
-        using namespace automotive;
-        using namespace automotive::miniature;
 
         LaneFollower::LaneFollower(const int32_t &argc, char **argv) : TimeTriggeredConferenceClientModule(argc, argv, "lanefollower"),
             m_hasAttachedToSharedImageMemory(false),
@@ -52,7 +48,7 @@ namespace opendlv {
             m_previousTime(),
             m_eSum(0),
             m_eOld(0),
-            m_vehicleControl() {}
+            m_actuationRequest() {}
 
         LaneFollower::~LaneFollower() {}
 
@@ -250,8 +246,9 @@ namespace opendlv {
 
 
             // Go forward.
-            m_vehicleControl.setSpeed(2);
-            m_vehicleControl.setSteeringWheelAngle(desiredSteering);
+            m_actuationRequest.setIsValid(true);
+            m_actuationRequest.setAcceleration(1);
+            m_actuationRequest.setSteering(desiredSteering);
         }
 
         // This method will do the main data processing job.
@@ -288,7 +285,7 @@ namespace opendlv {
                 }
 
                 // Create container for finally sending the set values for the control algorithm.
-                Container c2(m_vehicleControl);
+                Container c2(m_actuationRequest);
                 // Send container.
                 getConference().send(c2);
             }
