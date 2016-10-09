@@ -35,7 +35,7 @@
 using namespace std;
 using namespace odcore::data;
 using namespace odcore::data::image;
-using namespace automotive::miniature;
+using namespace opendlv::legacy;
 
 /**
  * This class derives from LaneFollower to allow access to protected methods.
