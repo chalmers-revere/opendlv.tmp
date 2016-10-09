@@ -76,11 +76,15 @@ namespace automotive {
         // This method will do the main data processing job.
         odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode SimpleDriver::body() {
             const odcore::io::URL urlOfSCNXFile(getKeyValueConfiguration().getValue<string>("global.scenario"));
+
+            const double LATITUDE = getKeyValueConfiguration().getValue<double>("global.reference.WGS84.latitude");
+            const double LONGITUDE = getKeyValueConfiguration().getValue<double>("global.reference.WGS84.longitude");
+            // TODO: Adjust interface after change in OpenDaVINCI.
+            WGS84Coordinate WGS84Reference(LATITUDE, WGS84Coordinate::NORTH, LONGITUDE, WGS84Coordinate::EAST);
+
             const double GAIN = 1.0;
             const double LENGTH_OF_STEERING_DRAWBAR = 5.0;
             const double LENGTH_OF_VELOCITY_DRAWBAR = 5.0;
-
-// TODO: Read WGS84 reference coordinate from configuration.
 
             core::wrapper::graph::DirectedGraph m_graph;
             if (urlOfSCNXFile.isValid()) {

@@ -20,6 +20,9 @@
 #
 
 global.scenario = file://AstaZero-CityArea19.scnx
+global.reference.WGS84.latitude = 57.772840
+global.reference.WGS84.longitude = 12.769964
+
 
 # The following attributes define the buffer sizes for recording and
 # replaying. You need to adjust these parameters depending on the
