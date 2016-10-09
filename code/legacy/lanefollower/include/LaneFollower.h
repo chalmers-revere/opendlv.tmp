@@ -31,77 +31,76 @@
 #include <odvdvehicle/generated/opendlv/proxy/ActuationRequest.h>
 
 namespace opendlv {
-    namespace legacy {
+namespace legacy {
 
-        using namespace std;
+using namespace std;
 
-        /**
-         * This class is an exemplary skeleton for processing video data.
-         */
-        class LaneFollower: public odcore::base::module::TimeTriggeredConferenceClientModule {
-            private:
-                /**
-                 * "Forbidden" copy constructor. Goal: The compiler should warn
-                 * already at compile time for unwanted bugs caused by any misuse
-                 * of the copy constructor.
-                 *
-                 * @param obj Reference to an object of this class.
-                 */
-                LaneFollower(const LaneFollower &/*obj*/);
+/**
+ * This class is an exemplary skeleton for processing video data.
+ */
+class LaneFollower : public odcore::base::module::TimeTriggeredConferenceClientModule {
+   private:
+    /**
+     * "Forbidden" copy constructor. Goal: The compiler should warn
+     * already at compile time for unwanted bugs caused by any misuse
+     * of the copy constructor.
+     *
+     * @param obj Reference to an object of this class.
+     */
+    LaneFollower(const LaneFollower & /*obj*/);
 
-                /**
-                 * "Forbidden" assignment operator. Goal: The compiler should warn
-                 * already at compile time for unwanted bugs caused by any misuse
-                 * of the assignment operator.
-                 *
-                 * @param obj Reference to an object of this class.
-                 * @return Reference to this instance.
-                 */
-                LaneFollower& operator=(const LaneFollower &/*obj*/);
+    /**
+     * "Forbidden" assignment operator. Goal: The compiler should warn
+     * already at compile time for unwanted bugs caused by any misuse
+     * of the assignment operator.
+     *
+     * @param obj Reference to an object of this class.
+     * @return Reference to this instance.
+     */
+    LaneFollower &operator=(const LaneFollower & /*obj*/);
 
-            public:
-                /**
-                 * Constructor.
-                 *
-                 * @param argc Number of command line arguments.
-                 * @param argv Command line arguments.
-                 */
-                LaneFollower(const int32_t &argc, char **argv);
+   public:
+    /**
+     * Constructor.
+     *
+     * @param argc Number of command line arguments.
+     * @param argv Command line arguments.
+     */
+    LaneFollower(const int32_t &argc, char **argv);
 
-                virtual ~LaneFollower();
+    virtual ~LaneFollower();
 
-                odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
+    odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
 
-            protected:
-                /**
-                 * This method is called to process an incoming container.
-                 *
-                 * @param c Container to process.
-                 * @return true if c was successfully processed.
-                 */
-                bool readSharedImage(odcore::data::Container &c);
+   protected:
+    /**
+     * This method is called to process an incoming container.
+     *
+     * @param c Container to process.
+     * @return true if c was successfully processed.
+     */
+    bool readSharedImage(odcore::data::Container &c);
 
-            private:
-                bool m_hasAttachedToSharedImageMemory;
-                std::shared_ptr<odcore::wrapper::SharedMemory> m_sharedImageMemory;
-                IplImage *m_image;
-                bool m_debug;
-                CvFont m_font;
+   private:
+    bool m_hasAttachedToSharedImageMemory;
+    std::shared_ptr< odcore::wrapper::SharedMemory > m_sharedImageMemory;
+    IplImage *m_image;
+    bool m_debug;
+    CvFont m_font;
 
-                odcore::data::TimeStamp m_previousTime;
-                double m_eSum;
-                double m_eOld;
+    odcore::data::TimeStamp m_previousTime;
+    double m_eSum;
+    double m_eOld;
 
-                opendlv::proxy::ActuationRequest m_actuationRequest;
+    opendlv::proxy::ActuationRequest m_actuationRequest;
 
-                virtual void setUp();
+    virtual void setUp();
 
-                virtual void tearDown();
+    virtual void tearDown();
 
-                void processImage();
-        };
-
-    }
+    void processImage();
+};
+}
 } // opendlv::legacy
 
 #endif /*LANEFOLLOWER_H_*/

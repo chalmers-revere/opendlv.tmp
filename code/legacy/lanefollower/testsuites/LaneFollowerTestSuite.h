@@ -22,10 +22,10 @@
 
 #include "cxxtest/TestSuite.h"
 
-#include <memory>
 #include "opendavinci/odcore/data/Container.h"
 #include "opendavinci/odcore/wrapper/SharedMemory.h"
 #include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
+#include <memory>
 
 #include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
 
@@ -41,139 +41,140 @@ using namespace opendlv::legacy;
  * This class derives from LaneFollower to allow access to protected methods.
  */
 class LaneFollowerTestling : public LaneFollower {
-    private:
-        LaneFollowerTestling();
-    
-    public:
-        LaneFollowerTestling(const int32_t &argc, char **argv) :
-            LaneFollower(argc, argv) {}
+   private:
+    LaneFollowerTestling();
 
-        // Here, you need to add all methods which are protected in LaneFollower and which are needed for the test cases.
+   public:
+    LaneFollowerTestling(const int32_t &argc, char **argv)
+        : LaneFollower(argc, argv) {}
 
-        /**
+    // Here, you need to add all methods which are protected in LaneFollower and which are needed for the test cases.
+
+    /**
          * This method calls the inherited but protected method readSharedImage from LaneFollower.
          *
          * @param c Container to be processed.
          * @return result from inherited method.
          */
-        bool callReadSharedImage(Container &c) {
-            return readSharedImage(c);
-        }
+    bool callReadSharedImage(Container &c) {
+        return readSharedImage(c);
+    }
 };
 
 /**
  * The actual testsuite starts here.
  */
 class LaneFollowerTest : public CxxTest::TestSuite {
-    private:
-        LaneFollowerTestling *ldt;
+   private:
+    LaneFollowerTestling *ldt;
 
-    public:
-        /**
+   public:
+    /**
          * This method will be called before each testXYZ-method.
          */
-        void setUp() {
-            // Prepare the data that would be available from commandline.
-            string argv0("lanedetector");
-            string argv1("--cid=100");
-            int32_t argc = 2;
-            char **argv;
-            argv = new char*[2];
-            argv[0] = const_cast<char*>(argv0.c_str());
-            argv[1] = const_cast<char*>(argv1.c_str());
+    void setUp() {
+        // Prepare the data that would be available from commandline.
+        string argv0("lanedetector");
+        string argv1("--cid=100");
+        int32_t argc = 2;
+        char **argv;
+        argv = new char *[2];
+        argv[0] = const_cast< char * >(argv0.c_str());
+        argv[1] = const_cast< char * >(argv1.c_str());
 
-            // Create an instance of sensorboard through LaneFollowerTestling which will be deleted in tearDown().
-            ldt = new LaneFollowerTestling(argc, argv);
-        }
+        // Create an instance of sensorboard through LaneFollowerTestling which will be deleted in tearDown().
+        ldt = new LaneFollowerTestling(argc, argv);
+    }
 
-        /**
+    /**
          * This method will be called after each testXYZ-method.
          */
-        void tearDown() {
-            delete ldt;
-            ldt = NULL;
+    void tearDown() {
+        delete ldt;
+        ldt = NULL;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // Below this line the actual testcases are defined.
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    void testLaneFollowerSuccessfullyCreated() {
+        TS_ASSERT(ldt != NULL);
+    }
+
+    void testLaneFollowerProcessingMethod() {
+        // First, create a shared memory region for the LaneFollower.
+        const uint32_t WIDTH = 3;
+        const uint32_t HEIGHT = 4;
+        const uint32_t BYTESPERPIXEL = 3;
+        std::shared_ptr< odcore::wrapper::SharedMemory > imageProducer = odcore::wrapper::SharedMemoryFactory::createSharedMemory("ImageProducer", WIDTH * HEIGHT * BYTESPERPIXEL);
+        TS_ASSERT(imageProducer->isValid());
+        TS_ASSERT(imageProducer->getSize() == WIDTH * HEIGHT * BYTESPERPIXEL);
+        imageProducer->lock();
+        for (uint32_t i = 0; i < imageProducer->getSize(); i++) {
+            *(((char *)(imageProducer->getSharedMemory())) + i) = ('A' + i);
         }
+        imageProducer->unlock();
 
-        ////////////////////////////////////////////////////////////////////////////////////
-        // Below this line the actual testcases are defined.
-        ////////////////////////////////////////////////////////////////////////////////////
+        // Wrap the shared memory region into a SharedImage.
+        SharedImage si;
+        si.setName(imageProducer->getName());
+        si.setWidth(WIDTH);
+        si.setHeight(HEIGHT);
+        si.setBytesPerPixel(BYTESPERPIXEL);
+        si.setSize(si.getWidth() * si.getHeight() * si.getBytesPerPixel());
 
-        void testLaneFollowerSuccessfullyCreated() {
-            TS_ASSERT(ldt != NULL);
-        }
+        // Create a container.
+        Container c(si);
 
-        void testLaneFollowerProcessingMethod() {
-            // First, create a shared memory region for the LaneFollower.
-            const uint32_t WIDTH = 3;
-            const uint32_t HEIGHT = 4;
-            const uint32_t BYTESPERPIXEL = 3;
-            std::shared_ptr<odcore::wrapper::SharedMemory> imageProducer = odcore::wrapper::SharedMemoryFactory::createSharedMemory("ImageProducer", WIDTH * HEIGHT * BYTESPERPIXEL);
-            TS_ASSERT(imageProducer->isValid());
-            TS_ASSERT(imageProducer->getSize() == WIDTH * HEIGHT * BYTESPERPIXEL);
-            imageProducer->lock();
-            for (uint32_t i = 0; i < imageProducer->getSize(); i++) {
-                *(((char*)(imageProducer->getSharedMemory())) + i) = ('A' + i);
-            }
-            imageProducer->unlock();
+        TS_ASSERT(ldt->callReadSharedImage(c) == true);
+    }
 
-            // Wrap the shared memory region into a SharedImage.
-            SharedImage si;
-            si.setName(imageProducer->getName());
-            si.setWidth(WIDTH);
-            si.setHeight(HEIGHT);
-            si.setBytesPerPixel(BYTESPERPIXEL);
-            si.setSize(si.getWidth() * si.getHeight() * si.getBytesPerPixel());
+    void testLaneFollowerProcessingMethodInvalidSharedMemory() {
+        // First, create a shared memory region for the LaneFollower.
+        const uint32_t WIDTH = 3;
+        const uint32_t HEIGHT = 4;
+        const uint32_t BYTESPERPIXEL = 3;
 
-            // Create a container.
-            Container c(si);
+        // Wrap the shared memory region into a SharedImage.
+        SharedImage si;
+        si.setName("InvalidSharedMemory");
+        si.setWidth(WIDTH);
+        si.setHeight(HEIGHT);
+        si.setBytesPerPixel(BYTESPERPIXEL);
+        si.setSize(si.getWidth() * si.getHeight() * si.getBytesPerPixel());
 
-            TS_ASSERT(ldt->callReadSharedImage(c) == true);
-        }
+        // Create a container.
+        Container c(si);
 
-        void testLaneFollowerProcessingMethodInvalidSharedMemory() {
-            // First, create a shared memory region for the LaneFollower.
-            const uint32_t WIDTH = 3;
-            const uint32_t HEIGHT = 4;
-            const uint32_t BYTESPERPIXEL = 3;
+        TS_ASSERT(ldt->callReadSharedImage(c) == false);
+    }
 
-            // Wrap the shared memory region into a SharedImage.
-            SharedImage si;
-            si.setName("InvalidSharedMemory");
-            si.setWidth(WIDTH);
-            si.setHeight(HEIGHT);
-            si.setBytesPerPixel(BYTESPERPIXEL);
-            si.setSize(si.getWidth() * si.getHeight() * si.getBytesPerPixel());
+    ////////////////////////////////////////////////////////////////////////////////////
+    // Below this line the necessary constructor for initializing the pointer variables,
+    // and the forbidden copy constructor and assignment operator are declared.
+    //
+    // These functions are normally not changed.
+    ////////////////////////////////////////////////////////////////////////////////////
 
-            // Create a container.
-            Container c(si);
-
-            TS_ASSERT(ldt->callReadSharedImage(c) == false);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////
-        // Below this line the necessary constructor for initializing the pointer variables,
-        // and the forbidden copy constructor and assignment operator are declared.
-        //
-        // These functions are normally not changed.
-        ////////////////////////////////////////////////////////////////////////////////////
-
-    public:
-        /**
+   public:
+    /**
          * This constructor is only necessary to initialize the pointer variable.
          */
-        LaneFollowerTest() : ldt(NULL) {}
+    LaneFollowerTest()
+        : ldt(NULL) {}
 
-    private:
-        /**
+   private:
+    /**
          * "Forbidden" copy constructor. Goal: The compiler should warn
          * already at compile time for unwanted bugs caused by any misuse
          * of the copy constructor.
          *
          * @param obj Reference to an object of this class.
          */
-        LaneFollowerTest(const LaneFollowerTest &/*obj*/);
+    LaneFollowerTest(const LaneFollowerTest & /*obj*/);
 
-        /**
+    /**
          * "Forbidden" assignment operator. Goal: The compiler should warn
          * already at compile time for unwanted bugs caused by any misuse
          * of the assignment operator.
@@ -181,8 +182,7 @@ class LaneFollowerTest : public CxxTest::TestSuite {
          * @param obj Reference to an object of this class.
          * @return Reference to this instance.
          */
-        LaneFollowerTest& operator=(const LaneFollowerTest &/*obj*/);
-
+    LaneFollowerTest &operator=(const LaneFollowerTest & /*obj*/);
 };
 
 #endif /*LANEFOLLOWERTESTSUITE_H_*/
