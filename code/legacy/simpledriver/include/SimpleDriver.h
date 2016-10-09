@@ -24,55 +24,54 @@
 
 #include "opendavinci/odcore/base/module/TimeTriggeredConferenceClientModule.h"
 
-namespace automotive {
-    namespace miniature {
+namespace opendlv {
+namespace legacy {
 
-        using namespace std;
+using namespace std;
 
-        /**
-         * This class is a skeleton to send driving commands to Hesperia-light's vehicle driving dynamics simulation.
-         */
-        class SimpleDriver : public odcore::base::module::TimeTriggeredConferenceClientModule {
-            private:
-                /**
-                 * "Forbidden" copy constructor. Goal: The compiler should warn
-                 * already at compile time for unwanted bugs caused by any misuse
-                 * of the copy constructor.
-                 *
-                 * @param obj Reference to an object of this class.
-                 */
-                SimpleDriver(const SimpleDriver &/*obj*/);
+/**
+ * This class is a skeleton to send driving commands to Hesperia-light's vehicle driving dynamics simulation.
+ */
+class SimpleDriver : public odcore::base::module::TimeTriggeredConferenceClientModule {
+   private:
+    /**
+     * "Forbidden" copy constructor. Goal: The compiler should warn
+     * already at compile time for unwanted bugs caused by any misuse
+     * of the copy constructor.
+     *
+     * @param obj Reference to an object of this class.
+     */
+    SimpleDriver(const SimpleDriver & /*obj*/);
 
-                /**
-                 * "Forbidden" assignment operator. Goal: The compiler should warn
-                 * already at compile time for unwanted bugs caused by any misuse
-                 * of the assignment operator.
-                 *
-                 * @param obj Reference to an object of this class.
-                 * @return Reference to this instance.
-                 */
-                SimpleDriver& operator=(const SimpleDriver &/*obj*/);
+    /**
+     * "Forbidden" assignment operator. Goal: The compiler should warn
+     * already at compile time for unwanted bugs caused by any misuse
+     * of the assignment operator.
+     *
+     * @param obj Reference to an object of this class.
+     * @return Reference to this instance.
+     */
+    SimpleDriver &operator=(const SimpleDriver & /*obj*/);
 
-            public:
-                /**
-                 * Constructor.
-                 *
-                 * @param argc Number of command line arguments.
-                 * @param argv Command line arguments.
-                 */
-                SimpleDriver(const int32_t &argc, char **argv);
+   public:
+    /**
+     * Constructor.
+     *
+     * @param argc Number of command line arguments.
+     * @param argv Command line arguments.
+     */
+    SimpleDriver(const int32_t &argc, char **argv);
 
-                virtual ~SimpleDriver();
+    virtual ~SimpleDriver();
 
-                odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
+    odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode body();
 
-            private:
-                virtual void setUp();
+   private:
+    virtual void setUp();
 
-                virtual void tearDown();
-        };
-
-    }
-} // automotive::miniature
+    virtual void tearDown();
+};
+}
+} // opendlv::legacy
 
 #endif /*SIMPLEDRIVER_H_*/

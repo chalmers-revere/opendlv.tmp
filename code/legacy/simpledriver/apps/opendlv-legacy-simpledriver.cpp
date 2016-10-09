@@ -22,6 +22,6 @@
 #include "SimpleDriver.h"
 
 int32_t main(int32_t argc, char **argv) {
-    automotive::miniature::SimpleDriver sd(argc, argv);
+    opendlv::legacy::SimpleDriver sd(argc, argv);
     return sd.runModule();
 }
