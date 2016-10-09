@@ -84,12 +84,17 @@ class TrafficLightDetector : public odcore::base::module::TimeTriggeredConferenc
     virtual void tearDown();
     void processImage();
 
+//    void detectAndDisplay(Mat& frame, int nr);
+//    void DetectCircles(cv::Mat &traffic_template, int nr);
+
    private:
     bool m_hasAttachedToSharedImageMemory;
     std::shared_ptr< odcore::wrapper::SharedMemory > m_sharedImageMemory;
     IplImage *m_image;
     bool m_debug;
-    CvFont m_font;
+
+    cv::CascadeClassifier *m_cascadeClassifier;
+    cv::Mat m_frame;
 };
 }
 } // opendlv::legacy

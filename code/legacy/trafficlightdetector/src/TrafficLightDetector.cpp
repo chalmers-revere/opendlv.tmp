@@ -17,10 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <iostream>
+#include <cstdio>
+#include <cstdlib>
 
-#include <opencv/cv.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include <opencv/highgui.h>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/contrib/contrib.hpp>
 
 #include <opendavinci/GeneratedHeaders_OpenDaVINCI.h>
 #include <opendavinci/odcore/base/KeyValueConfiguration.h>
@@ -45,16 +51,24 @@ TrafficLightDetector::TrafficLightDetector(const int32_t &argc, char **argv)
     , m_sharedImageMemory()
     , m_image(NULL)
     , m_debug(false)
-    , m_font() {}
+    , m_cascadeClassifier(NULL)
+    , m_frame() {
+    // Calling the xml trained haar.
+    m_cascadeClassifier = new cv::CascadeClassifier("./haar_xml_07_19.xml");
+}
 
-TrafficLightDetector::~TrafficLightDetector() {}
+TrafficLightDetector::~TrafficLightDetector() {
+    if (m_cascadeClassifier != NULL) {
+        delete m_cascadeClassifier;
+    }
+}
 
 void TrafficLightDetector::setUp() {
     // This method will be call automatically _before_ running body().
     if (m_debug) {
         // Create an OpenCV-window.
-        cvNamedWindow("WindowShowImage", CV_WINDOW_AUTOSIZE);
-        cvMoveWindow("WindowShowImage", 300, 100);
+        cv::namedWindow("WindowShowImage", CV_WINDOW_AUTOSIZE);
+        cv::moveWindow("WindowShowImage", 300, 100);
     }
 }
 
@@ -65,7 +79,7 @@ void TrafficLightDetector::tearDown() {
     }
 
     if (m_debug) {
-        cvDestroyWindow("WindowShowImage");
+        cv::destroyWindow("WindowShowImage");
     }
 }
 
@@ -93,13 +107,9 @@ bool TrafficLightDetector::readSharedImage(Container &c) {
 
             // Copying the image data is very expensive...
             if (m_image != NULL) {
-                memcpy(m_image->imageData,
-                m_sharedImageMemory->getSharedMemory(),
-                si.getWidth() * si.getHeight() * numberOfChannels);
+                memcpy(m_image->imageData, m_sharedImageMemory->getSharedMemory(), si.getWidth() * si.getHeight() * numberOfChannels);
+                m_frame = cv::cvarrToMat(m_image);
             }
-
-            // Mirror the image.
-            cvFlip(m_image, 0, -1);
 
             retVal = true;
         }
@@ -108,6 +118,49 @@ bool TrafficLightDetector::readSharedImage(Container &c) {
 }
 
 void TrafficLightDetector::processImage() {
+    if (m_cascadeClassifier != NULL) {
+        // Detect TrafficLights through cascade classifier.
+        vector<cv::Rect> trLights;
+        m_cascadeClassifier->detectMultiScale(m_frame, trLights, 1.1, 0, CV_HAAR_SCALE_IMAGE | CV_HAAR_FEATURE_MAX, cv::Size(24, 24));
+        cv::Mat trafficTemplate;
+        m_frame.copyTo(trafficTemplate);
+
+        // Circle detection after detecting a traffic light.
+        {
+            vector<cv::Vec3f> VectorCir;
+            cv::Mat resultImg;
+
+            //Apply color map to search for certian color
+            cv::applyColorMap(trafficTemplate, trafficTemplate, cv::COLORMAP_SUMMER);
+            cv::inRange(trafficTemplate, cv::Scalar(0, 90, 90), cv::Scalar(204, 255, 255), resultImg);
+            cv::GaussianBlur(resultImg, resultImg, cv::Size(9, 9), 0.5, 0.5);
+            cv::HoughCircles(resultImg,
+                VectorCir,
+                CV_HOUGH_GRADIENT,
+                2,
+                90,
+                50,
+                20,
+                4,
+                10);
+
+            for(auto iterCircles = VectorCir.begin(); iterCircles !=VectorCir.end(); iterCircles++) {
+                cv::circle(trafficTemplate,
+                    cv::Point((int)(*iterCircles)[0],(int)(*iterCircles)[1]),
+                    3,
+                    cv::Scalar(255,0,0),
+                    CV_FILLED);
+
+                cv::circle(trafficTemplate,cv::Point((int)(*iterCircles)[0],(int)(*iterCircles)[1]),
+                    (int)(*iterCircles)[2],
+                    cv::Scalar(0,0,255),
+                    3);
+            }
+            if (m_debug) {
+                cv::imshow("WindowShowImage", resultImg);
+            }
+        }
+    }
 }
 
 // This method will do the main data processing job.
@@ -115,16 +168,7 @@ void TrafficLightDetector::processImage() {
 odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode TrafficLightDetector::body() {
     // Get configuration data.
     KeyValueConfiguration kv = getKeyValueConfiguration();
-    m_debug = kv.getValue< int32_t >("lanefollower.debug") == 1;
-
-    // Initialize fonts.
-    const double hscale = 0.4;
-    const double vscale = 0.3;
-    const double shear = 0.2;
-    const int thickness = 1;
-    const int lineType = 6;
-
-    cvInitFont(&m_font, CV_FONT_HERSHEY_DUPLEX, hscale, vscale, shear, thickness, lineType);
+    m_debug = kv.getValue< int32_t >("trafficlightdetector.debug") == 1;
 
     // Overall state machine handler.
     while (getModuleStateAndWaitForRemainingTimeInTimeslice() == odcore::data::dmcp::ModuleStateMessage::RUNNING) {
@@ -142,11 +186,6 @@ odcore::data::dmcp::ModuleExitCodeMessage::ModuleExitCode TrafficLightDetector::
         if (true == has_next_frame) {
             processImage();
         }
-
-//        // Create container for finally sending the set values for the control algorithm.
-//        Container c2(m_actuationRequest);
-//        // Send container.
-//        getConference().send(c2);
     }
 
     return odcore::data::dmcp::ModuleExitCodeMessage::OKAY;
