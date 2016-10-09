@@ -32,6 +32,7 @@
 #include "opendlv/core/wrapper/graph/Edge.h"
 #include "opendlv/core/wrapper/graph/Vertex.h"
 #include "opendlv/data/environment/EgoState.h"
+#include "opendlv/data/environment/Point3.h"
 #include "opendlv/data/environment/WGS84Coordinate.h"
 #include "opendlv/data/environment/Polygon.h"
 #include "opendlv/data/environment/Obstacle.h"
@@ -82,9 +83,9 @@ namespace automotive {
             // TODO: Adjust interface after change in OpenDaVINCI.
             WGS84Coordinate WGS84Reference(LATITUDE, WGS84Coordinate::NORTH, LONGITUDE, WGS84Coordinate::EAST);
 
-            const double GAIN = 1.0;
-            const double LENGTH_OF_STEERING_DRAWBAR = 5.0;
-            const double LENGTH_OF_VELOCITY_DRAWBAR = 5.0;
+            const double GAIN = getKeyValueConfiguration().getValue<double>("simpledriver.gain");
+            const double LENGTH_OF_STEERING_DRAWBAR = getKeyValueConfiguration().getValue<double>("simpledriver.length_steering_drawbar");
+            const double LENGTH_OF_VELOCITY_DRAWBAR = getKeyValueConfiguration().getValue<double>("simpledriver.length_velocity_drawbar");
 
             core::wrapper::graph::DirectedGraph m_graph;
             if (urlOfSCNXFile.isValid()) {
@@ -150,38 +151,38 @@ namespace automotive {
                 cout << "Shortest route from " << v1.toString() << " to " << v2.toString() << ": " << endl;
                 cout << route.toString() << endl;
 
+                // Visualize route.
                 Container c;
                 c = Container(route);
                 getConference().send(c);
 
 
-
                 // Check, if the first point is in our field of view.
-// TODO: Read WGS84 coordinate + transform it into Cartesian space.
-                c = getKeyValueDataStore().get(opendlv::data::environment::EgoState::ID());
-                EgoState es = c.getData<EgoState>();
+//                EgoState es = c.getData<EgoState>();
                 c = getKeyValueDataStore().get(opendlv::data::environment::WGS84Coordinate::ID());
-                WGS84Coordinate wgs84 = c.getData<WGS84Coordinate>();
+                WGS84Coordinate WGS84current = c.getData<WGS84Coordinate>();
+                Point3 oldPosition = WGS84Reference.transform(WGS84current);
 
-                Polygon FOV;
-                const double ANGLE_FOV_IN_DEG = 45.0;
-                Point3 leftBoundary(10, 0, 0);
-                leftBoundary.rotateZ(ANGLE_FOV_IN_DEG/2.0 * cartesian::Constants::DEG2RAD + es.getRotation().getAngleXY());
-                leftBoundary += es.getPosition();
 
-                Point3 rightBoundary(10, 0, 0);
-                rightBoundary.rotateZ(-ANGLE_FOV_IN_DEG/2.0 * cartesian::Constants::DEG2RAD + es.getRotation().getAngleXY());
-                rightBoundary += es.getPosition();
+//                Polygon FOV;
+//                const double ANGLE_FOV_IN_DEG = 45.0;
+//                Point3 leftBoundary(10, 0, 0);
+//                leftBoundary.rotateZ(ANGLE_FOV_IN_DEG/2.0 * cartesian::Constants::DEG2RAD + es.getRotation().getAngleXY());
+//                leftBoundary += oldPosition;
 
-                FOV.add(es.getPosition() + Point3(1, 0, 0));
-                FOV.add(leftBoundary);
-                FOV.add(rightBoundary);
+//                Point3 rightBoundary(10, 0, 0);
+//                rightBoundary.rotateZ(-ANGLE_FOV_IN_DEG/2.0 * cartesian::Constants::DEG2RAD + es.getRotation().getAngleXY());
+//                rightBoundary += oldPosition;
 
-                // Visualize FOV.
-                Obstacle obstacleFOV(1, Obstacle::UPDATE);
-                obstacleFOV.setPolygon(FOV);
-                c = Container(obstacleFOV);
-                getConference().send(c);
+//                FOV.add(oldPosition + Point3(1, 0, 0));
+//                FOV.add(leftBoundary);
+//                FOV.add(rightBoundary);
+
+//                // Visualize FOV.
+//                Obstacle obstacleFOV(1, Obstacle::UPDATE);
+//                obstacleFOV.setPolygon(FOV);
+//                c = Container(obstacleFOV);
+//                getConference().send(c);
 
                 uint32_t waitingBeforeStart = 5;
                 while (waitingBeforeStart > 0) {
@@ -191,7 +192,9 @@ namespace automotive {
                 }
 
                 Point3 currentPoint = (*route.getListOfPoints().begin());
-                if (FOV.containsIgnoreZ(currentPoint) || true) {
+                if (true) {
+// Always start!
+//                if (FOV.containsIgnoreZ(currentPoint) || true) {
                     cerr << "Ready, first point of planned route is in our FOV. Let's go using our simple drawbar controller!" << endl;
 
 
@@ -200,7 +203,7 @@ namespace automotive {
                         double totalDrivenWay = 0;
 
                         // Start at current position.
-                        currentPoint = es.getPosition();
+                        currentPoint = oldPosition;
                         Point3 nextPoint;
                         vector<Point3> listOfPointsWaypoints = route.getListOfPoints();
 
@@ -219,27 +222,26 @@ namespace automotive {
                             bool nextWaypointInFrontOfDrawBar = true;
 
                             // Simply use the previously retrieved egostate.
-                            EgoState oldEgoState = es;
+//                            EgoState oldEgoState = es;
+                            oldPosition = currentPoint;
                             TimeStamp oldTimeStamp;
                             double V = 0;
                             while ( (nextWaypointInFrontOfDrawBar) && (getModuleStateAndWaitForRemainingTimeInTimeslice() == odcore::data::dmcp::ModuleStateMessage::RUNNING) ) {
-// TODO: Read next WGS84 coordinate + transform it into Cartesian space.
-                                c = getKeyValueDataStore().get(opendlv::data::environment::EgoState::ID());
-                                es = c.getData<EgoState>();
                                 c = getKeyValueDataStore().get(opendlv::data::environment::WGS84Coordinate::ID());
-                                wgs84 = c.getData<WGS84Coordinate>();
-
+                                WGS84current = c.getData<WGS84Coordinate>();
+                                currentPoint = WGS84Reference.transform(WGS84current);
                                 TimeStamp currentTimeStamp;
 
                                 // Compute velocity.
-                                double drivenWay = (es.getPosition() - oldEgoState.getPosition()).lengthXY();
+                                double drivenWay = (currentPoint - oldPosition).lengthXY();
+                                double heading = (currentPoint - oldPosition).getAngleXY();
                                 double passedTimeMS = (currentTimeStamp - oldTimeStamp).toMicroseconds();
                                 double passedTime = (static_cast<double>(passedTimeMS) / (1000.0 * 1000.0));
                                 if (passedTime > 0) {
                                     V = fabs( drivenWay / passedTime );
                                 }
                                 if (drivenWay > 0) {
-                                    oldEgoState = es;
+                                    oldPosition = currentPoint;
                                     oldTimeStamp = currentTimeStamp;
                                 }
 
@@ -250,21 +252,21 @@ namespace automotive {
 
                                 // Compute drawbar point of velocity control.
                                 Point3 drawbarVelocityPoint(LENGTH_OF_VELOCITY_DRAWBAR, 0, 0);
-                                drawbarVelocityPoint.rotateZ(es.getRotation().getAngleXY());
-                                drawbarVelocityPoint += es.getPosition();
+                                drawbarVelocityPoint.rotateZ(heading);
+                                drawbarVelocityPoint += currentPoint;
 
                                 // Compute drawbar point of steering control.
                                 Point3 drawbarSteeringPoint(LENGTH_OF_STEERING_DRAWBAR, 0, 0);
-                                drawbarSteeringPoint.rotateZ(es.getRotation().getAngleXY());
-                                drawbarSteeringPoint += es.getPosition();
+                                drawbarSteeringPoint.rotateZ(heading);
+                                drawbarSteeringPoint += currentPoint;
 
-                                nextWaypointInFrontOfDrawBar = drawbarSteeringPoint.isInFront(nextPoint, (drawbarSteeringPoint - es.getPosition()).getAngleXY());
+                                nextWaypointInFrontOfDrawBar = drawbarSteeringPoint.isInFront(nextPoint, (drawbarSteeringPoint - currentPoint).getAngleXY());
 
                                 //isPointFromUORInFrontOfDrawBar = drawbarSteeringPoint.isInFront(nextPointUOR, (drawbarSteeringPoint - es.getPosition()).getAngleXY());
 
                                 bool isPointFromUORInFrontOfDrawBar = false;
                                 while ( (!isPointFromUORInFrontOfDrawBar) && (listOfPointsWaypointsUOR.size() > 1) ) {
-                                    isPointFromUORInFrontOfDrawBar = drawbarSteeringPoint.isInFront(nextPointUOR, (drawbarSteeringPoint - es.getPosition()).getAngleXY());
+                                    isPointFromUORInFrontOfDrawBar = drawbarSteeringPoint.isInFront(nextPointUOR, (drawbarSteeringPoint - currentPoint).getAngleXY());
 
                                     if (!isPointFromUORInFrontOfDrawBar) {
                                         if (listOfPointsWaypointsUOR.size() > 1) {
@@ -305,7 +307,7 @@ namespace automotive {
                                     }
 
                                     // Compute orientation segment/egostate.
-                                    double psi = es.getRotation().getAngleXY() - directionSegment.getAngleXY();
+                                    double psi = heading - directionSegment.getAngleXY();
                                     if (isVerbose()) {
                                         cerr << "psi (local): " << psi << endl;
                                     }
@@ -363,11 +365,11 @@ namespace automotive {
 
                                     // Visualize drawbar.
                                     Polygon p;
-                                    p.add(es.getPosition());
+                                    p.add(currentPoint);
                                     p.add(drawbarSteeringPoint);
                                     p.add(perpendicularPointSteering);
 
-                                    cerr << es.getPosition().toString() << " " << drawbarSteeringPoint.toString() << " " << perpendicularPointSteering.toString() << endl;
+                                    cerr << oldPosition.toString() << " " << drawbarSteeringPoint.toString() << " " << perpendicularPointSteering.toString() << endl;
 
                                     Obstacle o(1, Obstacle::UPDATE);
                                     o.setPolygon(p);
